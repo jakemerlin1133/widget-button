@@ -1,20 +1,16 @@
-import { test, expect } from '@playwright/test';
+// import { test, expect } from '@playwright/test';
 
 // ✅ Set test timeout to 15 minutes (900,000 ms)
-test.describe.configure({ timeout: 15 * 60 * 1000 });
+// test.describe.configure({ timeout: 15 * 60 * 1000 });
 
-test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
-  await page.exposeFunction('sendFormDataToNode', (data) => {
-    console.log('Form Submitted (from browser):');
-    console.log(JSON.stringify(data, null, 2));
-  });
+// test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
 
-  await page.goto('https://www.ronmarhofernissan.com/new-inventory/index.htm', {
-    waitUntil: 'domcontentloaded',
-  });
+  // await page.goto('https://www.davehallmanhyundai.com/new-inventory/index.htm', {
+  //   waitUntil: 'domcontentloaded',
+  // });
 
   await page.evaluate(() => {
-    const priceTargetSelector = 'dd.final-price span.price-value';
+    const priceTargetSelector = 'dd.final-price .price-value';
     let cardSelector = 'li.vehicle-card[data-uuid]';
     let currentCardUuid = null;
 
@@ -23,7 +19,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       .unlock-btn {
         padding: 10px 20px;
         font-weight: bold;
-        background-color:rgb(159, 160, 170);
+        background-color:#002c5e;
         color: #fff;
         border-radius: 5px;
         border: none;
@@ -32,7 +28,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         font-size: 15px;
       }
       .unlock-btn:hover {
-        background-color:rgb(57, 75, 61);
+        background-color:#01264f;
       }
       #uuidDisplay {
         font-weight: 600;
@@ -99,7 +95,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
 
     const uuidDisplay = document.createElement('div');
     uuidDisplay.id = 'uuidDisplay';
-    uuidDisplay.textContent = 'UUID: N/A';
 
     const form = document.createElement('form');
     Object.assign(form.style, {
@@ -155,7 +150,27 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         comment: document.querySelector('#comment')?.value || '',
       };
 
-      window.sendFormDataToNode(formData);
+      console.log('Form Submitted:');
+      console.log(JSON.stringify(formData, null, 2));
+
+      try{
+
+        const response = await fetch('http://127.0.0.1:8000/api/sms/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+        // Add Authorization header if needed:
+        // 'Authorization': 'Bearer YOUR_TOKEN'
+          },
+            body: JSON.stringify(formData),
+        });
+
+          const result = await response.json();
+          console.log('✅ SMS API Response:', result);
+
+      }catch(error){
+           console.error('❌ Failed to send SMS:', error);
+      }
 
       form.reset();
       overlay.style.display = 'none';
@@ -164,7 +179,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       if (currentCardUuid) {
         const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
         if (card) {
-          const priceElement = card.querySelector('div.collapse span.portal-price');
+          const priceElement = card.querySelector(priceTargetSelector);
           if (priceElement) priceElement.style.display = '';
           const unlockBtn = card.querySelector('button.unlock-btn');
           if (unlockBtn) unlockBtn.remove();
@@ -192,7 +207,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
           btn.style.margin = '6px 0px'; // Optional margin only
           btn.onclick = () => {
             currentCardUuid = uuid;
-            uuidDisplay.textContent = `UUID: ${currentCardUuid || 'N/A'}`;
             overlay.style.display = 'block';
             formContainer.style.display = 'block';
           };
@@ -210,5 +224,5 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     });
   });
 
-  await page.waitForTimeout(15 * 60 * 1000); // 15 minutes
-});
+//   await page.waitForTimeout(15 * 60 * 1000); // 15 minutes
+// });
