@@ -147,9 +147,13 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+    const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+    const priceEl = card?.querySelector(priceTargetSelector);
+    const carPrice = priceEl ? priceEl.textContent.trim() : '';
+
       const formData = {
         carTitle: selectedCarTitle || '',
-        carPrice : priceTargetSelector || '',
+        carPrice: carPrice.replace(/[$,]/g, ''),
         firstName: document.querySelector('#fname')?.value || '',
         lastName: document.querySelector('#lname')?.value || '',
         contactMode: document.querySelector('#contactMode')?.value || '',
