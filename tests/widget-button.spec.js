@@ -1,13 +1,13 @@
-// import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 // ✅ Set test timeout to 15 minutes (900,000 ms)
-// test.describe.configure({ timeout: 15 * 60 * 1000 });
+test.describe.configure({ timeout: 15 * 60 * 1000 });
 
-// test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
+test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
 
-  // await page.goto('https://www.davehallmanhyundai.com/new-inventory/index.htm', {
-  //   waitUntil: 'domcontentloaded',
-  // });
+  await page.goto('https://www.davehallmanhyundai.com/new-inventory/index.htm', {
+    waitUntil: 'domcontentloaded',
+  });
 
   await page.evaluate(() => {
     const priceTargetSelector = 'dd.final-price .price-value';
@@ -224,5 +224,5 @@
     });
   });
 
-//   await page.waitForTimeout(15 * 60 * 1000); // 15 minutes
-// });
+  await page.waitForTimeout(15 * 60 * 1000); // 15 minutes
+});
