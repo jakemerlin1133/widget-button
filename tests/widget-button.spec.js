@@ -149,6 +149,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
 
       const formData = {
         carTitle: selectedCarTitle || '',
+        carPrice : priceTargetSelector || '',
         firstName: document.querySelector('#fname')?.value || '',
         lastName: document.querySelector('#lname')?.value || '',
         contactMode: document.querySelector('#contactMode')?.value || '',
