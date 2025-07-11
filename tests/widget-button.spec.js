@@ -12,7 +12,10 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
   await page.evaluate(() => {
     const priceTargetSelector = 'dd.final-price .price-value';
     let cardSelector = 'li.vehicle-card[data-uuid]';
+    let carTitle = 'h2.vehicle-card-title a span';
     let currentCardUuid = null;
+    let selectedCarTitle = '';
+
 
     const styleTag = document.createElement('style');
     styleTag.textContent = `
@@ -89,6 +92,8 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     closeBtn.onclick = () => {
       overlay.style.display = 'none';
       formContainer.style.display = 'none';
+      selectedCarTitle = '';
+      uuidDisplay.innerText = '';
     };
 
     formContainer.appendChild(closeBtn);
@@ -143,6 +148,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       e.preventDefault();
 
       const formData = {
+        carTitle: selectedCarTitle || '',
         firstName: document.querySelector('#fname')?.value || '',
         lastName: document.querySelector('#lname')?.value || '',
         contactMode: document.querySelector('#contactMode')?.value || '',
@@ -154,7 +160,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       console.log(JSON.stringify(formData, null, 2));
 
       try{
-
         const response = await fetch('http://127.0.0.1:8000/api/sms/send', {
           method: 'POST',
           headers: {
@@ -173,6 +178,8 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       }
 
       form.reset();
+      selectedCarTitle = '';
+      uuidDisplay.innerText = '';
       overlay.style.display = 'none';
       formContainer.style.display = 'none';
 
@@ -206,6 +213,8 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
           btn.className = 'unlock-btn';
           btn.style.margin = '6px 0px'; // Optional margin only
           btn.onclick = () => {
+            const cardTitleElement = card?.querySelector(carTitle);
+            selectedCarTitle = cardTitleElement ? cardTitleElement.textContent.trim() : '';
             currentCardUuid = uuid;
             overlay.style.display = 'block';
             formContainer.style.display = 'block';
