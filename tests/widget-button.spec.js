@@ -5,14 +5,14 @@ test.describe.configure({ timeout: 15 * 60 * 1000 });
 
 test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
 
-  await page.goto('https://www.davehallmanhyundai.com/new-inventory/index.htm', {
+  await page.goto('https://www.hallmanchevrolet.com/searchnew.aspx', {
     waitUntil: 'domcontentloaded',
   });
 
   await page.evaluate(() => {
-    const priceTargetSelector = 'dd.final-price .price-value';
+    const priceTargetSelector = '.featuredPrice';
     let cardSelector = 'li.vehicle-card[data-uuid]';
-    let carTitle = 'h2.vehicle-card-title a span';
+    let carTitle = 'h3.vehicle-title__text';
     let currentCardUuid = null;
     let selectedCarTitle = '';
 
