@@ -22,7 +22,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       .unlock-btn {
         padding: 10px 20px;
         font-weight: bold;
-        background-color:#002c5e;
+        background-color:#b6862d;
         color: #fff;
         border-radius: 5px;
         border: none;
@@ -31,7 +31,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         font-size: 15px;
       }
       .unlock-btn:hover {
-        background-color:#01264f;
+        background-color:#9b7125;
       }
       #uuidDisplay {
         font-weight: 600;
