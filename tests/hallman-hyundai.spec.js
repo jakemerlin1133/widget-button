@@ -31,7 +31,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         font-size: 15px;
       }
       .unlock-btn:hover {
-        background-color:#01264f;
+        background-color:#011c3b;
       }
       #uuidDisplay {
         font-weight: 600;
