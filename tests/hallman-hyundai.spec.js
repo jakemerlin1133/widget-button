@@ -144,60 +144,76 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       </div>
     `;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-    const priceEl = card?.querySelector(priceTargetSelector);
-    const carPrice = priceEl ? priceEl.textContent.trim() : '';
+  const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+  const priceEl = card?.querySelector(priceTargetSelector);
+  const carPrice = priceEl ? priceEl.textContent.trim() : '';
 
-      const formData = {
-        carTitle: selectedCarTitle || '',
-        carPrice: carPrice.replace(/[$,]/g, ''),
-        firstName: document.querySelector('#fname')?.value || '',
-        lastName: document.querySelector('#lname')?.value || '',
-        contactMode: document.querySelector('#contactMode')?.value || '',
-        phone: document.querySelector('#phone')?.value || '',
-        comment: document.querySelector('#comment')?.value || '',
-      };
+  const formData = {
+    carTitle: selectedCarTitle || '',
+    carPrice: carPrice.replace(/[$,]/g, ''),
+    firstName: document.querySelector('#fname')?.value || '',
+    lastName: document.querySelector('#lname')?.value || '',
+    contactMode: document.querySelector('#contactMode')?.value || '',
+    phone: document.querySelector('#phone')?.value || '',
+    comment: document.querySelector('#comment')?.value || '',
+  };
 
-      console.log('Form Submitted:');
-      console.log(JSON.stringify(formData, null, 2));
+  console.log('Form Submitted:');
+  console.log(JSON.stringify(formData, null, 2));
 
-      try{
-        const response = await fetch('http://127.0.0.1:8000/api/sms/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-        // Add Authorization header if needed:
-        // 'Authorization': 'Bearer YOUR_TOKEN'
-          },
-            body: JSON.stringify(formData),
-        });
-
-          const result = await response.json();
-          console.log('✅ SMS API Response:', result);
-
-      }catch(error){
-           console.error('❌ Failed to send SMS:', error);
-      }
-
-      form.reset();
-      selectedCarTitle = '';
-      uuidDisplay.innerText = '';
-      overlay.style.display = 'none';
-      formContainer.style.display = 'none';
-
-      if (currentCardUuid) {
-        const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-        if (card) {
-          const priceElement = card.querySelector(priceTargetSelector);
-          if (priceElement) priceElement.style.display = '';
-          const unlockBtn = card.querySelector('button.unlock-btn');
-          if (unlockBtn) unlockBtn.remove();
-        }
-      }
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Authorization': 'Bearer YOUR_TOKEN' if needed
+      },
+      body: JSON.stringify(formData),
     });
+
+    const result = await response.json();
+    console.log('✅ SMS API Response:', result);
+
+    if (result.status === 'OTP sent!') {
+      // OTP received here:
+      const otp = result.otp;
+      console.log('Received OTP:', otp);
+
+      // You can now do something with the OTP,
+      // e.g. show an input field for the user to enter it,
+      // or auto-fill it if testing.
+
+      alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
+
+      // Optional: save OTP in state or localStorage for further verification steps
+      // localStorage.setItem('otp', otp);
+    } else {
+      alert('Failed to send OTP.');
+    }
+  } catch (error) {
+    console.error('❌ Failed to send SMS:', error);
+  }
+
+  form.reset();
+  selectedCarTitle = '';
+  uuidDisplay.innerText = '';
+  overlay.style.display = 'none';
+  formContainer.style.display = 'none';
+
+  if (currentCardUuid) {
+    const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+    if (card) {
+      const priceElement = card.querySelector(priceTargetSelector);
+      if (priceElement) priceElement.style.display = '';
+      const unlockBtn = card.querySelector('button.unlock-btn');
+      if (unlockBtn) unlockBtn.remove();
+    }
+  }
+});
+
 
     formContainer.appendChild(uuidDisplay);
     formContainer.appendChild(form);
