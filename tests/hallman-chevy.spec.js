@@ -29,9 +29,11 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         cursor: pointer;
         transition: background-color 0.2s ease;
         font-size: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       .unlock-btn:hover {
         background-color:#9b7125;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
       }
       #uuidDisplay {
         font-weight: 600;
@@ -108,111 +110,165 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       gap: '20px',
     });
 
-    form.innerHTML = `
-      <h3 style="grid-column: span 2; font-size:25px;">Unlock the Instant Price</h3>
+const chevroletLogo = document.querySelector('div.rotateLogos img.logoChevrolet');
+const textLogo = document.querySelector('li.dealerLogo a.stat-image-link img.img-responsive');
 
-      <div>
-        <label for="fname">First Name:</label><br>
-        <input type="text" id="fname" name="fname" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
-      </div>
+let clonedChevrolet = null;
+let clonedText = null;
 
-      <div>
-        <label for="lname">Last Name:</label><br>
-        <input type="text" id="lname" name="lname" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
-      </div>
+if (chevroletLogo) {
+  clonedChevrolet = chevroletLogo.cloneNode(true);
+  clonedChevrolet.style.height = '43px';
+  clonedChevrolet.style.width = 'auto';
+}
 
-      <div>
-        <label for="contactMode">Preferred Contact:</label><br>
-        <select id="contactMode" name="contactMode" style="font-size:16px; padding: 8px; width: 100%; outline:none;">
-          <option value="SMS">SMS</option>
-          <option value="Call">Call</option>
-        </select>
-      </div>
+if (textLogo) {
+  clonedText = textLogo.cloneNode(true);
+  clonedText.style.height = '43px';
+  clonedText.style.width = 'auto';
+  clonedText.style.marginRight = '10px'; // space between logos
+}
 
-      <div>
-        <label for="phone">Phone:</label><br>
-        <input type="text" id="phone" name="phone" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
-      </div>
 
-      <div style="grid-column: span 2;">
-        <label for="comment">Comment:</label><br>
-        <textarea id="comment" name="comment" required style="font-size:16px; padding: 8px; width: 100%; height: 150px; outline:none;"></textarea>
-      </div>
 
-      <div style="grid-column: span 2; text-align: center;">
-        <button type="submit" class="unlock-btn">Unlock Instant Price</button>
-      </div>
-    `;
+form.innerHTML = `
+  <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 10px;">
+    <div id="formLogoHolder" style="display: flex; align-items: center; gap: 10px;"></div>
+  </div>
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+  <div style="grid-column: span 2; align-items: center;">
+    <h3 style="font-size: 20px; margin: 0;">Unlock the Instant Price</h3>
+  </div>
 
-  const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-  const priceEl = card?.querySelector(priceTargetSelector);
-  const carPrice = priceEl ? priceEl.textContent.trim() : '';
+  <div>
+    <label for="fname">First Name:</label><br>
+    <input type="text" id="fname" name="fname" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
+  </div>
 
-  const formData = {
-    carTitle: selectedCarTitle || '',
-    carPrice: carPrice.replace(/[$,]/g, ''),
-    firstName: document.querySelector('#fname')?.value || '',
-    lastName: document.querySelector('#lname')?.value || '',
-    contactMode: document.querySelector('#contactMode')?.value || '',
-    phone: document.querySelector('#phone')?.value || '',
-    comment: document.querySelector('#comment')?.value || '',
-  };
+  <div>
+    <label for="lname">Last Name:</label><br>
+    <input type="text" id="lname" name="lname" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
+  </div>
 
-  console.log('Form Submitted:');
-  console.log(JSON.stringify(formData, null, 2));
+  <div>
+    <label for="contactMode">Preferred Contact:</label><br>
+    <select id="contactMode" name="contactMode" style="font-size:16px; padding: 8px; width: 100%; outline:none;">
+      <option value="SMS">SMS</option>
+      <option value="Call">Call</option>
+    </select>
+  </div>
 
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer YOUR_TOKEN' if needed
-      },
-      body: JSON.stringify(formData),
+  <div>
+    <label for="phone">Phone:</label><br>
+    <input type="text" id="phone" name="phone" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
+  </div>
+
+  <div style="grid-column: span 2;">
+    <label for="comment">Comment:</label><br>
+    <textarea id="comment" name="comment" required style="font-size:16px; padding: 8px; width: 100%; height: 150px; outline:none;"></textarea>
+  </div>
+
+  <div style="grid-column: span 2; text-align: center; color: #303030ff; font-weight: 400; font-size: 13.6px; margin: 0px 17px;">
+    By requesting Instant Price, you agree that Dave Hallman Chevrolet and its affiliates, and sales professionals may call/text you about your inquiry, which may involve use of automated means and prerecorded/artificial voices. Message/data rates may apply. You also agree to our
+    <a href="#" style="cursor: pointer;">terms of use</a>.
+  </div>
+
+  <div style="grid-column: span 2; text-align: center;">
+    <button type="submit" class="unlock-btn">Unlock Instant Price</button>
+  </div>
+`;
+
+// ✅ Now inject logos into the logo holder
+const logoHolder = form.querySelector('#formLogoHolder');
+
+  if (clonedChevrolet) {
+    const link = document.createElement('a');
+    link.href = '/';
+    link.appendChild(clonedChevrolet);
+    logoHolder.appendChild(link);
+  }
+
+if (logoHolder) {
+  if (clonedText) {
+    const link = document.createElement('a');
+    link.href = '/';
+    link.appendChild(clonedText);
+    logoHolder.appendChild(link);
+  }
+
+} else {
+  console.warn('⚠️ #formLogoHolder not found in form');
+}
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+      const priceEl = card?.querySelector(priceTargetSelector);
+      const carPrice = priceEl ? priceEl.textContent.trim() : '';
+
+      const formData = {
+        carTitle: selectedCarTitle || '',
+        carPrice: carPrice.replace(/[$,]/g, ''),
+        firstName: document.querySelector('#fname')?.value || '',
+        lastName: document.querySelector('#lname')?.value || '',
+        contactMode: document.querySelector('#contactMode')?.value || '',
+        phone: document.querySelector('#phone')?.value || '',
+        comment: document.querySelector('#comment')?.value || '',
+      };
+
+      console.log('Form Submitted:');
+      console.log(JSON.stringify(formData, null, 2));
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': 'Bearer YOUR_TOKEN' if needed
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        console.log('✅ SMS API Response:', result);
+
+        if (result.status === 'OTP sent!') {
+          // OTP received here:
+          const otp = result.otp;
+          console.log('Received OTP:', otp);
+
+          // You can now do something with the OTP,
+          // e.g. show an input field for the user to enter it,
+          // or auto-fill it if testing.
+
+          alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
+
+          // Optional: save OTP in state or localStorage for further verification steps
+          // localStorage.setItem('otp', otp);
+        } else {
+          alert('Failed to send OTP.');
+        }
+      } catch (error) {
+        console.error('❌ Failed to send SMS:', error);
+      }
+
+      form.reset();
+      selectedCarTitle = '';
+      uuidDisplay.innerText = '';
+      overlay.style.display = 'none';
+      formContainer.style.display = 'none';
+
+      if (currentCardUuid) {
+        const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+        if (card) {
+          const priceElement = card.querySelector(priceTargetSelector);
+          if (priceElement) priceElement.style.display = '';
+          const unlockBtn = card.querySelector('button.unlock-btn');
+          if (unlockBtn) unlockBtn.remove();
+        }
+      }
     });
-
-    const result = await response.json();
-    console.log('✅ SMS API Response:', result);
-
-    if (result.status === 'OTP sent!') {
-      // OTP received here:
-      const otp = result.otp;
-      console.log('Received OTP:', otp);
-
-      // You can now do something with the OTP,
-      // e.g. show an input field for the user to enter it,
-      // or auto-fill it if testing.
-
-      alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
-
-      // Optional: save OTP in state or localStorage for further verification steps
-      // localStorage.setItem('otp', otp);
-    } else {
-      alert('Failed to send OTP.');
-    }
-  } catch (error) {
-    console.error('❌ Failed to send SMS:', error);
-  }
-
-  form.reset();
-  selectedCarTitle = '';
-  uuidDisplay.innerText = '';
-  overlay.style.display = 'none';
-  formContainer.style.display = 'none';
-
-  if (currentCardUuid) {
-    const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-    if (card) {
-      const priceElement = card.querySelector(priceTargetSelector);
-      if (priceElement) priceElement.style.display = '';
-      const unlockBtn = card.querySelector('button.unlock-btn');
-      if (unlockBtn) unlockBtn.remove();
-    }
-  }
-});
 
 
     formContainer.appendChild(uuidDisplay);

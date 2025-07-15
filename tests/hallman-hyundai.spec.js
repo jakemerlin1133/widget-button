@@ -29,9 +29,11 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         cursor: pointer;
         transition: background-color 0.2s ease;
         font-size: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       .unlock-btn:hover {
         background-color:#011c3b;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
       }
       #uuidDisplay {
         font-weight: 600;
@@ -108,8 +110,35 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       gap: '20px',
     });
 
+    const hyundaiLogo = document.querySelector('div.header-logo-container a.home-logolink img');
+    const textLogo = document.querySelector('div.header-logo-container a.header-logo-style img');
+
+    let clonedHyundai = null;
+    let clonedText = null;
+
+    if (hyundaiLogo) {
+      clonedHyundai = hyundaiLogo.cloneNode(true);
+      clonedHyundai.style.height = '33px';
+      clonedHyundai.style.width = 'auto';
+      clonedHyundai.style.marginRight = '20px';
+    }
+
+    if (textLogo) {
+      clonedText = textLogo.cloneNode(true);
+      clonedText.style.height = '47px';
+      clonedText.style.width = 'auto';
+      clonedText.style.marginRight = '10px'; // space between logos
+    }
+
+
     form.innerHTML = `
-      <h3 style="grid-column: span 2; font-size:25px;">Unlock the Instant Price</h3>
+      <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 10px;">
+        <div id="formLogoHolder" style="display: flex; align-items: center;"></div>
+      </div>
+
+      <div style="grid-column: span 2; align-items: center;">
+        <h3 style="font-size: 20px; margin: 0;">Unlock the Instant Price</h3>
+      </div>
 
       <div>
         <label for="fname">First Name:</label><br>
@@ -139,80 +168,107 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         <textarea id="comment" name="comment" required style="font-size:16px; padding: 8px; width: 100%; height: 150px; outline:none;"></textarea>
       </div>
 
+      <div style="grid-column: span 2; text-align: center; color: #303030ff; font-weight: 400; font-size: 13.6px; margin: 0px 17px; ">
+        By requesting Instant Price, you agree that Dave Hallman Hyundai and its affiliates, and sales professionals may call/text you about your inquiry, which may involve use of automated means and prerecorded/artificial voices. Message/data rates may apply. You also agree to our
+        <a href="#" style="cursor: pointer;"> terms of use </a>.
+      </div>
+
       <div style="grid-column: span 2; text-align: center;">
         <button type="submit" class="unlock-btn">Unlock Instant Price</button>
       </div>
     `;
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+// ✅ Now inject logos into the logo holder
+const logoHolder = form.querySelector('#formLogoHolder');
 
-  const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-  const priceEl = card?.querySelector(priceTargetSelector);
-  const carPrice = priceEl ? priceEl.textContent.trim() : '';
+  if (clonedHyundai) {
+    const link = document.createElement('a');
+    link.href = '/';
+    link.appendChild(clonedHyundai);
+    logoHolder.appendChild(link);
+  }
 
-  const formData = {
-    carTitle: selectedCarTitle || '',
-    carPrice: carPrice.replace(/[$,]/g, ''),
-    firstName: document.querySelector('#fname')?.value || '',
-    lastName: document.querySelector('#lname')?.value || '',
-    contactMode: document.querySelector('#contactMode')?.value || '',
-    phone: document.querySelector('#phone')?.value || '',
-    comment: document.querySelector('#comment')?.value || '',
-  };
+if (logoHolder) {
+  if (clonedText) {
+    const link = document.createElement('a');
+    link.href = '/';
+    link.appendChild(clonedText);
+    logoHolder.appendChild(link);
+  }
 
-  console.log('Form Submitted:');
-  console.log(JSON.stringify(formData, null, 2));
+} else {
+  console.warn('⚠️ #formLogoHolder not found in form');
+}
 
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer YOUR_TOKEN' if needed
-      },
-      body: JSON.stringify(formData),
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+      const priceEl = card?.querySelector(priceTargetSelector);
+      const carPrice = priceEl ? priceEl.textContent.trim() : '';
+
+      const formData = {
+        carTitle: selectedCarTitle || '',
+        carPrice: carPrice.replace(/[$,]/g, ''),
+        firstName: document.querySelector('#fname')?.value || '',
+        lastName: document.querySelector('#lname')?.value || '',
+        contactMode: document.querySelector('#contactMode')?.value || '',
+        phone: document.querySelector('#phone')?.value || '',
+        comment: document.querySelector('#comment')?.value || '',
+      };
+
+      console.log('Form Submitted:');
+      console.log(JSON.stringify(formData, null, 2));
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': 'Bearer YOUR_TOKEN' if needed
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        console.log('✅ SMS API Response:', result);
+
+        if (result.status === 'OTP sent!') {
+          // OTP received here:
+          const otp = result.otp;
+          console.log('Received OTP:', otp);
+
+          // You can now do something with the OTP,
+          // e.g. show an input field for the user to enter it,
+          // or auto-fill it if testing.
+
+          alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
+
+          // Optional: save OTP in state or localStorage for further verification steps
+          // localStorage.setItem('otp', otp);
+        } else {
+          alert('Failed to send OTP.');
+        }
+      } catch (error) {
+        console.error('❌ Failed to send SMS:', error);
+      }
+
+      form.reset();
+      selectedCarTitle = '';
+      uuidDisplay.innerText = '';
+      overlay.style.display = 'none';
+      formContainer.style.display = 'none';
+
+      if (currentCardUuid) {
+        const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+        if (card) {
+          const priceElement = card.querySelector(priceTargetSelector);
+          if (priceElement) priceElement.style.display = '';
+          const unlockBtn = card.querySelector('button.unlock-btn');
+          if (unlockBtn) unlockBtn.remove();
+        }
+      }
     });
-
-    const result = await response.json();
-    console.log('✅ SMS API Response:', result);
-
-    if (result.status === 'OTP sent!') {
-      // OTP received here:
-      const otp = result.otp;
-      console.log('Received OTP:', otp);
-
-      // You can now do something with the OTP,
-      // e.g. show an input field for the user to enter it,
-      // or auto-fill it if testing.
-
-      alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
-
-      // Optional: save OTP in state or localStorage for further verification steps
-      // localStorage.setItem('otp', otp);
-    } else {
-      alert('Failed to send OTP.');
-    }
-  } catch (error) {
-    console.error('❌ Failed to send SMS:', error);
-  }
-
-  form.reset();
-  selectedCarTitle = '';
-  uuidDisplay.innerText = '';
-  overlay.style.display = 'none';
-  formContainer.style.display = 'none';
-
-  if (currentCardUuid) {
-    const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-    if (card) {
-      const priceElement = card.querySelector(priceTargetSelector);
-      if (priceElement) priceElement.style.display = '';
-      const unlockBtn = card.querySelector('button.unlock-btn');
-      if (unlockBtn) unlockBtn.remove();
-    }
-  }
-});
 
 
     formContainer.appendChild(uuidDisplay);
