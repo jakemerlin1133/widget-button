@@ -10,7 +10,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
 
   await page.evaluate(() => {
     const priceFinalSelector = 'li.priceStakRowBuyPrice:nth-child(3)';
-    const priceTargetSelector = '.featuredPrice ';
+    const priceTargetSelector = '.featuredPrice';
     let cardSelector = 'div.vehicle-card[data-vin]';
     let carTitle = 'h3.vehicle-title__text';
     let currentCardUuid = null;
@@ -191,16 +191,18 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       logoHolder.appendChild(link);
     }
 
+// Form for submitting credentials and phone number
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const card = document.querySelector(`li[data-vin="${currentCardUuid}"]`);
+  const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
   const priceEl = card?.querySelector(priceTargetSelector);
-  const carPrice = priceEl ? priceEl.textContent.trim() : '';
+  const rawPriceText = priceEl ? priceEl.textContent : '';
+  const carPrice = (rawPriceText.match(/[\d,]+(?:\.\d{2})?/) || [''])[0].replace(/[,]/g, '');
 
   const formData = {
     carTitle: selectedCarTitle || '',
-    carPrice: carPrice.replace(/[$,]/g, ''),
+    carPrice: (carPrice || '').replace(/[$,]/g, ''),
     firstName: document.querySelector('#fname')?.value || '',
     lastName: document.querySelector('#lname')?.value || '',
     contactMode: document.querySelector('#contactMode')?.value || '',
@@ -214,9 +216,7 @@ form.addEventListener('submit', async (e) => {
   try {
     const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
     });
 
@@ -227,19 +227,19 @@ form.addEventListener('submit', async (e) => {
       const otp = result.otp;
       console.log('Received OTP:', otp);
 
-      // ✅ Show OTP UI instead of hiding everything
-      form.innerHTML = ''; // Clear previous form
+      // 🔄 Clear previous form and create new form for OTP verification
+      formContainer.removeChild(form);
+
+      const otpForm = document.createElement('form');
+      otpForm.style.display = 'grid';
+      otpForm.style.gridTemplateColumns = '1fr 1fr';
+      otpForm.style.gap = '20px';
 
       const otpTitle = document.createElement('h3');
       otpTitle.textContent = 'Enter the OTP sent to your phone';
       otpTitle.style.gridColumn = 'span 2';
       otpTitle.style.textAlign = 'center';
       otpTitle.style.marginBottom = '10px';
-
-      const verifyBtn = document.createElement('button');
-      verifyBtn.type = 'submit';
-      verifyBtn.className = 'unlock-btn';
-      verifyBtn.textContent = 'Verify OTP';
 
       const otpInput = document.createElement('input');
       otpInput.type = 'text';
@@ -249,14 +249,22 @@ form.addEventListener('submit', async (e) => {
       otpInput.style.padding = '10px';
       otpInput.style.width = '100%';
       otpInput.style.outline = 'none';
+      otpInput.style.gridColumn = 'span 2';
       otpInput.style.textAlign = 'center';
 
-      form.appendChild(otpTitle);
-      form.appendChild(verifyBtn);
-      form.appendChild(otpInput);
+      const verifyBtn = document.createElement('button');
+      verifyBtn.type = 'submit';
+      verifyBtn.className = 'unlock-btn';
+      verifyBtn.textContent = 'Verify OTP';
+      verifyBtn.style.gridColumn = 'span 2';
 
-      // ✅ New submit handler for OTP form
-      form.onsubmit = (e) => {
+      otpForm.appendChild(otpTitle);
+      otpForm.appendChild(otpInput);
+      otpForm.appendChild(verifyBtn);
+      formContainer.appendChild(otpForm);
+
+      // ✅ OTP submit handler
+      otpForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const enteredOtp = otpInput.value.trim();
 
@@ -285,7 +293,8 @@ form.addEventListener('submit', async (e) => {
           alert('❌ Invalid OTP. Please try again.');
           otpInput.focus();
         }
-      };
+      });
+
     } else {
       alert('Failed to send OTP.');
       overlay.style.display = 'none';
@@ -297,6 +306,7 @@ form.addEventListener('submit', async (e) => {
     formContainer.style.display = 'none';
   }
 });
+
 
 
     formContainer.appendChild(uuidDisplay);
