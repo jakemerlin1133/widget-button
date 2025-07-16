@@ -9,13 +9,14 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
   });
 
   await page.evaluate(() => {
+    const priceFinalSelector = 'li.priceStakRowBuyPrice:nth-child(3)';
     const priceTargetSelector = '.featuredPrice ';
     let cardSelector = 'div.vehicle-card[data-vin]';
     let carTitle = 'h3.vehicle-title__text';
     let currentCardUuid = null;
     let selectedCarTitle = '';
 
-
+    // === Your existing styles & UI setup here (unchanged) ===
     const styleTag = document.createElement('style');
     styleTag.textContent = `
       .unlock-btn {
@@ -175,26 +176,19 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
   </div>
 `;
 
-    // ✅ Now inject logos into the logo holder
+    // Inject logos into logo holder
     const logoHolder = form.querySelector('#formLogoHolder');
-
     if (clonedChevrolet) {
       const link = document.createElement('a');
       link.href = '/';
       link.appendChild(clonedChevrolet);
       logoHolder.appendChild(link);
     }
-
-    if (logoHolder) {
-      if (clonedText) {
-        const link = document.createElement('a');
-        link.href = '/';
-        link.appendChild(clonedText);
-        logoHolder.appendChild(link);
-      }
-
-    } else {
-      console.warn('⚠️ #formLogoHolder not found in form');
+    if (logoHolder && clonedText) {
+      const link = document.createElement('a');
+      link.href = '/';
+      link.appendChild(clonedText);
+      logoHolder.appendChild(link);
     }
 
     form.addEventListener('submit', async (e) => {
@@ -222,7 +216,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // 'Authorization': 'Bearer YOUR_TOKEN' if needed
           },
           body: JSON.stringify(formData),
         });
@@ -231,18 +224,9 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         console.log('✅ SMS API Response:', result);
 
         if (result.status === 'OTP sent!') {
-          // OTP received here:
           const otp = result.otp;
           console.log('Received OTP:', otp);
-
-          // You can now do something with the OTP,
-          // e.g. show an input field for the user to enter it,
-          // or auto-fill it if testing.
-
           alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
-
-          // Optional: save OTP in state or localStorage for further verification steps
-          // localStorage.setItem('otp', otp);
         } else {
           alert('Failed to send OTP.');
         }
@@ -261,17 +245,30 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         if (card) {
           const priceElement = card.querySelector(priceTargetSelector);
           if (priceElement) priceElement.style.display = '';
+
+          const finalPriceElement = card.querySelector(priceFinalSelector);
+          if (finalPriceElement) finalPriceElement.style.display = '';
+          
           const unlockBtn = card.querySelector('button.unlock-btn');
           if (unlockBtn) unlockBtn.remove();
         }
       }
     });
 
-
     formContainer.appendChild(uuidDisplay);
     formContainer.appendChild(form);
     document.body.appendChild(overlay);
     document.body.appendChild(formContainer);
+
+    // --- THE KEY PART: Remove the <li> with Final Price: label ---
+    const listItems = [...document.querySelectorAll('li.priceBlockItem.priceBlockItemPrice.priceStakRowBuyPrice')];
+    for (const li of listItems) {
+      const labelSpan = li.querySelector('span.priceBlocItemPriceLabel');
+      if (labelSpan && labelSpan.textContent.trim().startsWith('Final Price')) {
+        li.remove();
+        break;
+      }
+    }
 
     const injectButtons = () => {
       const targets = document.querySelectorAll(priceTargetSelector);
@@ -285,7 +282,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
           const btn = document.createElement('button');
           btn.innerText = 'Unlock Instant Price';
           btn.className = 'unlock-btn';
-          btn.style.margin = '6px 0px'; // Optional margin only
+          btn.style.margin = '6px 0px';
           btn.onclick = () => {
             const cardTitleElement = card?.querySelector(carTitle);
             selectedCarTitle = cardTitleElement ? cardTitleElement.textContent.trim() : '';
@@ -307,5 +304,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     });
   });
 
-  await page.waitForTimeout(60 * 60 * 1000); // 15 minutes
+  // Wait 15 minutes for manual testing or whatever
+  await page.waitForTimeout(15 * 60 * 1000);
 });
