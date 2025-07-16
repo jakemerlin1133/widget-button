@@ -191,69 +191,113 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       logoHolder.appendChild(link);
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-      const card = document.querySelector(`li[data-vin="${currentCardUuid}"]`);
-      const priceEl = card?.querySelector(priceTargetSelector);
-      const carPrice = priceEl ? priceEl.textContent.trim() : '';
+  const card = document.querySelector(`li[data-vin="${currentCardUuid}"]`);
+  const priceEl = card?.querySelector(priceTargetSelector);
+  const carPrice = priceEl ? priceEl.textContent.trim() : '';
 
-      const formData = {
-        carTitle: selectedCarTitle || '',
-        carPrice: carPrice.replace(/[$,]/g, ''),
-        firstName: document.querySelector('#fname')?.value || '',
-        lastName: document.querySelector('#lname')?.value || '',
-        contactMode: document.querySelector('#contactMode')?.value || '',
-        phone: document.querySelector('#phone')?.value || '',
-        comment: document.querySelector('#comment')?.value || '',
-      };
+  const formData = {
+    carTitle: selectedCarTitle || '',
+    carPrice: carPrice.replace(/[$,]/g, ''),
+    firstName: document.querySelector('#fname')?.value || '',
+    lastName: document.querySelector('#lname')?.value || '',
+    contactMode: document.querySelector('#contactMode')?.value || '',
+    phone: document.querySelector('#phone')?.value || '',
+    comment: document.querySelector('#comment')?.value || '',
+  };
 
-      console.log('Form Submitted:');
-      console.log(JSON.stringify(formData, null, 2));
+  console.log('Form Submitted:');
+  console.log(JSON.stringify(formData, null, 2));
 
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
 
-        const result = await response.json();
-        console.log('✅ SMS API Response:', result);
+    const result = await response.json();
+    console.log('✅ SMS API Response:', result);
 
-        if (result.status === 'OTP sent!') {
-          const otp = result.otp;
-          console.log('Received OTP:', otp);
-          alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
+    if (result.status === 'OTP sent!') {
+      const otp = result.otp;
+      console.log('Received OTP:', otp);
+
+      // ✅ Show OTP UI instead of hiding everything
+      form.innerHTML = ''; // Clear previous form
+
+      const otpTitle = document.createElement('h3');
+      otpTitle.textContent = 'Enter the OTP sent to your phone';
+      otpTitle.style.gridColumn = 'span 2';
+      otpTitle.style.textAlign = 'center';
+      otpTitle.style.marginBottom = '10px';
+
+      const verifyBtn = document.createElement('button');
+      verifyBtn.type = 'submit';
+      verifyBtn.className = 'unlock-btn';
+      verifyBtn.textContent = 'Verify OTP';
+
+      const otpInput = document.createElement('input');
+      otpInput.type = 'text';
+      otpInput.placeholder = 'Enter OTP';
+      otpInput.required = true;
+      otpInput.style.fontSize = '16px';
+      otpInput.style.padding = '10px';
+      otpInput.style.width = '100%';
+      otpInput.style.outline = 'none';
+      otpInput.style.textAlign = 'center';
+
+      form.appendChild(otpTitle);
+      form.appendChild(verifyBtn);
+      form.appendChild(otpInput);
+
+      // ✅ New submit handler for OTP form
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const enteredOtp = otpInput.value.trim();
+
+        if (enteredOtp === otp) {
+          alert('✅ OTP Verified! Unlocking price...');
+
+          if (currentCardUuid) {
+            const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
+            if (card) {
+              const priceElement = card.querySelector(priceTargetSelector);
+              if (priceElement) priceElement.style.display = '';
+
+              const finalPriceElement = card.querySelector(priceFinalSelector);
+              if (finalPriceElement) finalPriceElement.style.display = '';
+
+              const unlockBtn = card.querySelector('button.unlock-btn');
+              if (unlockBtn) unlockBtn.remove();
+            }
+          }
+
+          selectedCarTitle = '';
+          uuidDisplay.innerText = '';
+          overlay.style.display = 'none';
+          formContainer.style.display = 'none';
         } else {
-          alert('Failed to send OTP.');
+          alert('❌ Invalid OTP. Please try again.');
+          otpInput.focus();
         }
-      } catch (error) {
-        console.error('❌ Failed to send SMS:', error);
-      }
-
-      form.reset();
-      selectedCarTitle = '';
-      uuidDisplay.innerText = '';
+      };
+    } else {
+      alert('Failed to send OTP.');
       overlay.style.display = 'none';
       formContainer.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('❌ Failed to send SMS:', error);
+    overlay.style.display = 'none';
+    formContainer.style.display = 'none';
+  }
+});
 
-      if (currentCardUuid) {
-        const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
-        if (card) {
-          const priceElement = card.querySelector(priceTargetSelector);
-          if (priceElement) priceElement.style.display = '';
-
-          const finalPriceElement = card.querySelector(priceFinalSelector);
-          if (finalPriceElement) finalPriceElement.style.display = '';
-          
-          const unlockBtn = card.querySelector('button.unlock-btn');
-          if (unlockBtn) unlockBtn.remove();
-        }
-      }
-    });
 
     formContainer.appendChild(uuidDisplay);
     formContainer.appendChild(form);
