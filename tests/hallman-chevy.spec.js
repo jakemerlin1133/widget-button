@@ -4,12 +4,12 @@ import { test, expect } from '@playwright/test';
 test.describe.configure({ timeout: 15 * 60 * 1000 });
 
 test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
-
   await page.goto('https://www.hallmanchevrolet.com/searchnew.aspx', {
     waitUntil: 'domcontentloaded',
   });
 
   await page.evaluate(() => {
+    const priceLabelSelector= "";
     const priceTargetSelector = '.featuredPrice ';
     let cardSelector = 'div.vehicle-card[data-vin]';
     let carTitle = 'h3.vehicle-title__text';

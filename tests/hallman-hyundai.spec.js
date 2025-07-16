@@ -1,22 +1,23 @@
 import { test, expect } from '@playwright/test';
 
-// ✅ Set test timeout to 15 minutes (900,000 ms)
+// Set test timeout to 15 minutes
 test.describe.configure({ timeout: 15 * 60 * 1000 });
 
 test('Inject form and handle unlock buttons on inventory page', async ({ page }) => {
-
   await page.goto('https://www.davehallmanhyundai.com/new-inventory/index.htm', {
     waitUntil: 'domcontentloaded',
   });
 
   await page.evaluate(() => {
-    const priceTargetSelector = 'dd.final-price .price-value';
-    let cardSelector = 'li.vehicle-card[data-uuid]';
-    let carTitle = 'h2.vehicle-card-title a span';
+    const priceLabelSelector = 'dt.final-price.SIFRule';
+    const priceValueSelector = 'dd.final-price.SIFRule.font-weight-bold.ddc-font-size-large.line-height-reset.pb-2';
+    const cardSelector = 'li.vehicle-card[data-uuid]';
+    const carTitleSelector = 'h2.vehicle-card-title a span';
     let currentCardUuid = null;
     let selectedCarTitle = '';
+    const unlockedUuids = new Set();
 
-
+    // Inject styles
     const styleTag = document.createElement('style');
     styleTag.textContent = `
       .unlock-btn {
@@ -24,12 +25,14 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         font-weight: bold;
         background-color:#002c5e;
         color: #fff;
-        border-radius: 5px;
         border: none;
         cursor: pointer;
         transition: background-color 0.2s ease;
         font-size: 15px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        box-sizing: border-box;
+        display: block;
       }
       .unlock-btn:hover {
         background-color:#011c3b;
@@ -44,6 +47,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     `;
     document.head.appendChild(styleTag);
 
+    // Create overlay
     const overlay = document.createElement('div');
     overlay.id = 'revealOverlay';
     Object.assign(overlay.style, {
@@ -58,6 +62,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       display: 'none',
     });
 
+    // Create form container
     const formContainer = document.createElement('div');
     formContainer.id = 'revealFormContainer';
     Object.assign(formContainer.style, {
@@ -76,6 +81,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       boxSizing: 'border-box',
     });
 
+    // Close button
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
     Object.assign(closeBtn.style, {
@@ -97,12 +103,13 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       selectedCarTitle = '';
       uuidDisplay.innerText = '';
     };
-
     formContainer.appendChild(closeBtn);
 
+    // UUID display
     const uuidDisplay = document.createElement('div');
     uuidDisplay.id = 'uuidDisplay';
 
+    // Build form
     const form = document.createElement('form');
     Object.assign(form.style, {
       display: 'grid',
@@ -127,7 +134,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       clonedText = textLogo.cloneNode(true);
       clonedText.style.height = '47px';
       clonedText.style.width = 'auto';
-      clonedText.style.marginRight = '10px'; // space between logos
+      clonedText.style.marginRight = '10px';
     }
 
     form.innerHTML = `
@@ -167,7 +174,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         <textarea id="comment" name="comment" required style="font-size:16px; padding: 8px; width: 100%; height: 150px; outline:none;"></textarea>
       </div>
 
-      <div style="grid-column: span 2; text-align: center; color: #303030ff; font-weight: 400; font-size: 13.6px; margin: 0px 17px; ">
+      <div style="grid-column: span 2; text-align: center; color: #303030ff; font-weight: 400; font-size: 13.6px; margin: 0px 17px;">
         By requesting Instant Price, you agree that Dave Hallman Hyundai and its affiliates, and sales professionals may call/text you about your inquiry, which may involve use of automated means and prerecorded/artificial voices. Message/data rates may apply. You also agree to our
         <a href="#" style="cursor: pointer;"> terms of use </a>.
       </div>
@@ -177,33 +184,26 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       </div>
     `;
 
-    // ✅ Now inject logos into the logo holder
+    // Insert logos
     const logoHolder = form.querySelector('#formLogoHolder');
-
     if (clonedHyundai) {
       const link = document.createElement('a');
       link.href = '/';
       link.appendChild(clonedHyundai);
       logoHolder.appendChild(link);
     }
-
-    if (logoHolder) {
-      if (clonedText) {
-        const link = document.createElement('a');
-        link.href = '/';
-        link.appendChild(clonedText);
-        logoHolder.appendChild(link);
-      }
-
-    } else {
-      console.warn('⚠️ #formLogoHolder not found in form');
+    if (clonedText) {
+      const link = document.createElement('a');
+      link.href = '/';
+      link.appendChild(clonedText);
+      logoHolder.appendChild(link);
     }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
-      const priceEl = card?.querySelector(priceTargetSelector);
+      const priceEl = card?.querySelector(priceValueSelector);
       const carPrice = priceEl ? priceEl.textContent.trim() : '';
 
       const formData = {
@@ -216,16 +216,12 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         comment: document.querySelector('#comment')?.value || '',
       };
 
-      console.log('Form Submitted:');
-      console.log(JSON.stringify(formData, null, 2));
+      console.log('Form Submitted:', JSON.stringify(formData, null, 2));
 
       try {
         const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // 'Authorization': 'Bearer YOUR_TOKEN' if needed
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
 
@@ -233,18 +229,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         console.log('✅ SMS API Response:', result);
 
         if (result.status === 'OTP sent!') {
-          // OTP received here:
-          const otp = result.otp;
-          console.log('Received OTP:', otp);
-
-          // You can now do something with the OTP,
-          // e.g. show an input field for the user to enter it,
-          // or auto-fill it if testing.
-
-          alert(`OTP sent to ${result.to}. Your OTP is: ${otp}`);
-
-          // Optional: save OTP in state or localStorage for further verification steps
-          // localStorage.setItem('otp', otp);
+          alert(`OTP sent to ${result.to}. Your OTP is: ${result.otp}`);
         } else {
           alert('Failed to send OTP.');
         }
@@ -258,56 +243,68 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       overlay.style.display = 'none';
       formContainer.style.display = 'none';
 
+      // Restore price and hide button
       if (currentCardUuid) {
         const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
         if (card) {
-          const priceElement = card.querySelector(priceTargetSelector);
+          const priceElement = card.querySelector(priceValueSelector);
+          const priceLabelElement = card.querySelector(priceLabelSelector);
+
           if (priceElement) priceElement.style.display = '';
+          if (priceLabelElement) priceLabelElement.style.display = '';
+
           const unlockBtn = card.querySelector('button.unlock-btn');
           if (unlockBtn) unlockBtn.remove();
+
+          unlockedUuids.add(currentCardUuid); // Mark as unlocked
         }
       }
     });
-
 
     formContainer.appendChild(uuidDisplay);
     formContainer.appendChild(form);
     document.body.appendChild(overlay);
     document.body.appendChild(formContainer);
 
+    // Inject Unlock buttons replacing final price label and value
     const injectButtons = () => {
-      const targets = document.querySelectorAll(priceTargetSelector);
-      targets.forEach((el) => {
-        const card = el.closest(cardSelector);
-        const uuid = card?.getAttribute('data-uuid') || '';
+      const values = document.querySelectorAll(priceValueSelector);
 
-        if (!el.getAttribute('data-modified')) {
-          el.style.display = 'none';
+      values.forEach((valueEl) => {
+        const card = valueEl.closest(cardSelector);
+        if (!card) return;
+        const uuid = card.getAttribute('data-uuid');
+        if (!uuid) return;
 
+        const priceLabel = card.querySelector(priceLabelSelector);
+
+        if (!unlockedUuids.has(uuid)) {
+          if (valueEl) valueEl.style.display = 'none';
+          if (priceLabel) priceLabel.style.display = 'none';
+        }
+
+        if (!valueEl.getAttribute('data-modified')) {
           const btn = document.createElement('button');
           btn.innerText = 'Unlock Instant Price';
           btn.className = 'unlock-btn';
-          btn.style.margin = '6px 0px'; // Optional margin only
           btn.onclick = () => {
-            const cardTitleElement = card?.querySelector(carTitle);
+            const cardTitleElement = card.querySelector(carTitleSelector);
             selectedCarTitle = cardTitleElement ? cardTitleElement.textContent.trim() : '';
             currentCardUuid = uuid;
             overlay.style.display = 'block';
             formContainer.style.display = 'block';
           };
 
-          el.parentElement?.appendChild(btn);
-          el.setAttribute('data-modified', 'true');
+          valueEl.parentElement.appendChild(btn);
+          valueEl.setAttribute('data-modified', 'true');
         }
       });
     };
 
     injectButtons();
-    new MutationObserver(injectButtons).observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    new MutationObserver(injectButtons).observe(document.body, { childList: true, subtree: true });
   });
 
-  await page.waitForTimeout(15 * 60 * 1000); // 15 minutes
+  // Keep browser open for testing
+  await page.waitForTimeout(15 * 60 * 1000);
 });
