@@ -9,7 +9,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
   });
 
   await page.evaluate(() => {
-    const priceLabelSelector= "";
     const priceTargetSelector = '.featuredPrice ';
     let cardSelector = 'div.vehicle-card[data-vin]';
     let carTitle = 'h3.vehicle-title__text';
@@ -201,7 +200,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+      const card = document.querySelector(`li[data-vin="${currentCardUuid}"]`);
       const priceEl = card?.querySelector(priceTargetSelector);
       const carPrice = priceEl ? priceEl.textContent.trim() : '';
 
@@ -258,7 +257,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       formContainer.style.display = 'none';
 
       if (currentCardUuid) {
-        const card = document.querySelector(`li[data-uuid="${currentCardUuid}"]`);
+        const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
         if (card) {
           const priceElement = card.querySelector(priceTargetSelector);
           if (priceElement) priceElement.style.display = '';
