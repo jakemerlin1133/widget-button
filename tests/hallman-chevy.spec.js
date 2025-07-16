@@ -110,33 +110,31 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       gap: '20px',
     });
 
-const chevroletLogo = document.querySelector('div.rotateLogos img.logoChevrolet');
-const textLogo = document.querySelector('li.dealerLogo a.stat-image-link img.img-responsive');
+    const chevroletLogo = document.querySelector('div.rotateLogos img.logoChevrolet');
+    const textLogo = document.querySelector('li.dealerLogo a.stat-image-link img.img-responsive');
 
-let clonedChevrolet = null;
-let clonedText = null;
+    let clonedChevrolet = null;
+    let clonedText = null;
 
-if (chevroletLogo) {
-  clonedChevrolet = chevroletLogo.cloneNode(true);
-  clonedChevrolet.style.height = '43px';
-  clonedChevrolet.style.width = 'auto';
-}
+    if (chevroletLogo) {
+      clonedChevrolet = chevroletLogo.cloneNode(true);
+      clonedChevrolet.style.height = '43px';
+      clonedChevrolet.style.width = 'auto';
+    }
 
-if (textLogo) {
-  clonedText = textLogo.cloneNode(true);
-  clonedText.style.height = '43px';
-  clonedText.style.width = 'auto';
-  clonedText.style.marginRight = '10px'; // space between logos
-}
+    if (textLogo) {
+      clonedText = textLogo.cloneNode(true);
+      clonedText.style.height = '43px';
+      clonedText.style.width = 'auto';
+      clonedText.style.marginRight = '10px'; // space between logos
+    }
 
-
-
-form.innerHTML = `
+    form.innerHTML = `
   <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 10px;">
     <div id="formLogoHolder" style="display: flex; align-items: center; gap: 10px;"></div>
   </div>
 
-  <div style="grid-column: span 2; align-items: center;">
+  <div style="grid-column: span 2; display: flex; justify-content: center; align-items: center;">
     <h3 style="font-size: 20px; margin: 0;">Unlock the Instant Price</h3>
   </div>
 
@@ -178,27 +176,27 @@ form.innerHTML = `
   </div>
 `;
 
-// ✅ Now inject logos into the logo holder
-const logoHolder = form.querySelector('#formLogoHolder');
+    // ✅ Now inject logos into the logo holder
+    const logoHolder = form.querySelector('#formLogoHolder');
 
-  if (clonedChevrolet) {
-    const link = document.createElement('a');
-    link.href = '/';
-    link.appendChild(clonedChevrolet);
-    logoHolder.appendChild(link);
-  }
+    if (clonedChevrolet) {
+      const link = document.createElement('a');
+      link.href = '/';
+      link.appendChild(clonedChevrolet);
+      logoHolder.appendChild(link);
+    }
 
-if (logoHolder) {
-  if (clonedText) {
-    const link = document.createElement('a');
-    link.href = '/';
-    link.appendChild(clonedText);
-    logoHolder.appendChild(link);
-  }
+    if (logoHolder) {
+      if (clonedText) {
+        const link = document.createElement('a');
+        link.href = '/';
+        link.appendChild(clonedText);
+        logoHolder.appendChild(link);
+      }
 
-} else {
-  console.warn('⚠️ #formLogoHolder not found in form');
-}
+    } else {
+      console.warn('⚠️ #formLogoHolder not found in form');
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

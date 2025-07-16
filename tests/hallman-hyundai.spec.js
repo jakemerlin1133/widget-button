@@ -130,13 +130,12 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       clonedText.style.marginRight = '10px'; // space between logos
     }
 
-
     form.innerHTML = `
       <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 10px;">
         <div id="formLogoHolder" style="display: flex; align-items: center;"></div>
       </div>
 
-      <div style="grid-column: span 2; align-items: center;">
+      <div style="grid-column: span 2; display: flex; justify-content: center; align-items: center;">
         <h3 style="font-size: 20px; margin: 0;">Unlock the Instant Price</h3>
       </div>
 
@@ -178,27 +177,27 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       </div>
     `;
 
-// ✅ Now inject logos into the logo holder
-const logoHolder = form.querySelector('#formLogoHolder');
+    // ✅ Now inject logos into the logo holder
+    const logoHolder = form.querySelector('#formLogoHolder');
 
-  if (clonedHyundai) {
-    const link = document.createElement('a');
-    link.href = '/';
-    link.appendChild(clonedHyundai);
-    logoHolder.appendChild(link);
-  }
+    if (clonedHyundai) {
+      const link = document.createElement('a');
+      link.href = '/';
+      link.appendChild(clonedHyundai);
+      logoHolder.appendChild(link);
+    }
 
-if (logoHolder) {
-  if (clonedText) {
-    const link = document.createElement('a');
-    link.href = '/';
-    link.appendChild(clonedText);
-    logoHolder.appendChild(link);
-  }
+    if (logoHolder) {
+      if (clonedText) {
+        const link = document.createElement('a');
+        link.href = '/';
+        link.appendChild(clonedText);
+        logoHolder.appendChild(link);
+      }
 
-} else {
-  console.warn('⚠️ #formLogoHolder not found in form');
-}
+    } else {
+      console.warn('⚠️ #formLogoHolder not found in form');
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
