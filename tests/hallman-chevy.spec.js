@@ -191,134 +191,160 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       logoHolder.appendChild(link);
     }
 
-    
-// Form for submitting credentials and phone number
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+let savedPhoneNumber = '';
 
-  const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
-  const priceEl = card?.querySelector(priceTargetSelector);
-  const rawPriceText = priceEl ? priceEl.textContent : '';
-  const carPrice = (rawPriceText.match(/[\d,]+(?:\.\d{2})?/) || [''])[0].replace(/[,]/g, '');
-
-  const formData = {
-    carTitle: selectedCarTitle || '',
-    carPrice: (carPrice || '').replace(/[$,]/g, ''),
-    firstName: document.querySelector('#fname')?.value || '',
-    lastName: document.querySelector('#lname')?.value || '',
-    contactMode: document.querySelector('#contactMode')?.value || '',
-    phone: document.querySelector('#phone')?.value || '',
-    comment: document.querySelector('#comment')?.value || '',
-  };
-
-  console.log('🔄 Form Submitted:', JSON.stringify(formData, null, 2));
-
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-
-    const result = await response.json();
-    console.log('✅ SMS API Response:', result);
-
-    const otp = result.otp || '';  // grab OTP if returned, else empty string
-
-    alert('📩 OTP sent to your phone!');
-
-    if (!formContainer) {
-      console.error('❌ formContainer is not defined!');
-      return;
-    }
-
-    formContainer.innerHTML = '';  // Clear existing content
-
-    if (closeBtn) {
-      formContainer.appendChild(closeBtn); // Re-add close button if any
-    }
-
-    // Setup formContainer styles
-    formContainer.style.display = 'grid';
-    formContainer.style.gridTemplateColumns = '1fr 1fr';
-    formContainer.style.gap = '20px';
-
-    // Creat code title
-    const otpTitle = document.createElement('h3');
-    otpTitle.textContent = 'Enter the code sent to your phone';
-    otpTitle.style.gridColumn = 'span 2';
-    otpTitle.style.textAlign = 'center';
-    otpTitle.style.marginBottom = '10px';
-
-    // Create OTP input
-    const otpInput = document.createElement('input');
-    otpInput.type = 'text';
-    otpInput.placeholder = 'Enter code';
-    otpInput.required = true;
-    otpInput.style.fontSize = '16px';
-    otpInput.style.padding = '10px';
-    otpInput.style.width = '100%';
-    otpInput.style.outline = 'none';
-    otpInput.style.gridColumn = 'span 2';
-    otpInput.style.textAlign = 'center';
-
-    // Create Verify button
-    const verifyBtn = document.createElement('button');
-    verifyBtn.type = 'button';
-    verifyBtn.className = 'unlock-btn';
-    verifyBtn.textContent = 'code';
-    verifyBtn.style.gridColumn = 'span 2';
-
-    // Append to container
-    formContainer.appendChild(otpTitle);
-    formContainer.appendChild(otpInput);
-    formContainer.appendChild(verifyBtn);
-
-    overlay.style.display = 'block';
-
-    setTimeout(() => otpInput.focus(), 100);
-
-    verifyBtn.addEventListener('click', (e) => {
+    // Form for submitting credentials and phone number
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const enteredOtp = otpInput.value.trim();
-      console.log('🔍 Entered code:', enteredOtp);
 
-      if (enteredOtp === otp) {
-        alert('✅ Code Verified! Unlocking price...');
+      const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
+      const priceEl = card?.querySelector(priceTargetSelector);
+      const rawPriceText = priceEl ? priceEl.textContent : '';
+      const carPrice = (rawPriceText.match(/[\d,]+(?:\.\d{2})?/) || [''])[0].replace(/[,]/g, '');
 
-        if (currentCardUuid) {
-          const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
-          if (card) {
-            const priceElement = card.querySelector(priceTargetSelector);
-            if (priceElement) priceElement.style.display = '';
+      const formData = {
+        carTitle: selectedCarTitle || '',
+        carPrice: (carPrice || '').replace(/[$,]/g, ''),
+        firstName: document.querySelector('#fname')?.value || '',
+        lastName: document.querySelector('#lname')?.value || '',
+        contactMode: document.querySelector('#contactMode')?.value || '',
+        phone: document.querySelector('#phone')?.value || '',
+        comment: document.querySelector('#comment')?.value || '',
+      };
 
-            const finalPriceElement = card.querySelector(priceFinalSelector);
-            if (finalPriceElement) finalPriceElement.style.display = '';
+      console.log('🔄 Form Submitted:', JSON.stringify(formData, null, 2));
 
-            const unlockBtn = card.querySelector('button.unlock-btn');
-            if (unlockBtn) unlockBtn.remove();
-          }
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        console.log('✅ SMS API Response:', result);
+
+        const otp = result.otp || '';  // grab OTP if returned, else empty string
+
+        alert('📩 OTP sent to your phone!');
+
+        if (!formContainer) {
+          console.error('❌ formContainer is not defined!');
+          return;
         }
 
-        selectedCarTitle = '';
-        uuidDisplay.innerText = '';
+        savedPhoneNumber = document.querySelector('#phone')?.value.trim() || '';
+
+        formContainer.innerHTML = '';  // Clear existing content
+
+        if (closeBtn) {
+          formContainer.appendChild(closeBtn); // Re-add close button if any
+        }
+
+        // Setup formContainer styles
+        formContainer.style.display = 'grid';
+        formContainer.style.gridTemplateColumns = '1fr 1fr';
+        formContainer.style.gap = '20px';
+
+        // Creat code title
+        const otpTitle = document.createElement('h3');
+        otpTitle.textContent = 'Code sent to your phone';
+        otpTitle.style.gridColumn = 'span 2';
+        otpTitle.style.textAlign = 'center';
+        otpTitle.style.marginBottom = '10px';
+
+        // Create OTP input
+        const otpInput = document.createElement('input');
+        otpInput.type = 'text';
+        otpInput.placeholder = 'Enter code';
+        otpInput.required = true;
+        otpInput.style.fontSize = '16px';
+        otpInput.style.padding = '10px';
+        otpInput.style.width = '100%';
+        otpInput.style.outline = 'none';
+        otpInput.style.gridColumn = 'span 2';
+        otpInput.style.textAlign = 'center';
+
+        // Create Verify button
+        const verifyBtn = document.createElement('button');
+        verifyBtn.type = 'button';
+        verifyBtn.className = 'unlock-btn';
+        verifyBtn.textContent = 'Verify Code';
+        verifyBtn.style.gridColumn = 'span 2';
+
+        // Append to container
+        formContainer.appendChild(otpTitle);
+        formContainer.appendChild(otpInput);
+        formContainer.appendChild(verifyBtn);
+
+        overlay.style.display = 'block';
+
+        setTimeout(() => otpInput.focus(), 100);
+
+        verifyBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const enteredOtp = otpInput.value.trim();
+          console.log('🔍 Entered code:', enteredOtp);
+
+          const payload = {
+          phone: savedPhoneNumber,
+          otp: enteredOtp,
+          };
+
+        console.log('📦 Payload to verify-otp:', payload);
+
+          try {
+            const response = await fetch('http://127.0.0.1:8000/api/verify-otp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+              alert('✅ Code Verified! Unlocking price...');
+
+              if (currentCardUuid) {
+                const card = document.querySelector(`div[data-vin="${currentCardUuid}"]`);
+                if (card) {
+                  const priceElement = card.querySelector(priceTargetSelector);
+                  if (priceElement) priceElement.style.display = '';
+
+                  const finalPriceElement = card.querySelector(priceFinalSelector);
+                  if (finalPriceElement) finalPriceElement.style.display = '';
+
+                  const unlockBtn = card.querySelector('button.unlock-btn');
+                  if (unlockBtn) unlockBtn.remove();
+                }
+              }
+
+              selectedCarTitle = '';
+              uuidDisplay.innerText = '';
+              overlay.style.display = 'none';
+              formContainer.style.display = 'none';
+
+            } else {
+              alert('❌ Invalid code. Please try again.');
+              otpInput.focus();
+            }
+
+          } catch (error) {
+            console.error('Error verifying OTP:', error);
+            alert('⚠️ Server error. Please try again later.');
+          }
+        });
+
+      } catch (error) {
+        console.error('❌ Failed to send SMS:', error);
+        alert('Server error. Please try again later.');
         overlay.style.display = 'none';
         formContainer.style.display = 'none';
-
-      } else {
-        alert('❌ Invalid OTP. Please try again.');
-        otpInput.focus();
       }
     });
-
-  } catch (error) {
-    console.error('❌ Failed to send SMS:', error);
-    alert('Server error. Please try again later.');
-    overlay.style.display = 'none';
-    formContainer.style.display = 'none';
-  }
-});
-
 
 
 
