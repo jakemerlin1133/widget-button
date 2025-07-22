@@ -191,7 +191,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       logoHolder.appendChild(link);
     }
 
-let savedPhoneNumber = '';
+    let savedPhoneNumber = '';
 
     // Form for submitting credentials and phone number
     form.addEventListener('submit', async (e) => {
@@ -272,6 +272,22 @@ let savedPhoneNumber = '';
         verifyBtn.textContent = 'Verify Code';
         verifyBtn.style.gridColumn = 'span 2';
 
+        Object.assign(verifyBtn.style, {
+          padding: '10px 20px',
+          fontWeight: 'bold',
+          backgroundColor: '#b6862d',
+          color: '#fff',
+          borderRadius: '5px',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '15px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          transition: 'background-color 0.2s ease',
+          marginTop: "20px",
+          width: '100%',
+          boxSizing: 'border-box'
+        });
+
         // Append to container
         formContainer.appendChild(otpTitle);
         formContainer.appendChild(otpInput);
@@ -287,11 +303,11 @@ let savedPhoneNumber = '';
           console.log('🔍 Entered code:', enteredOtp);
 
           const payload = {
-          phone: savedPhoneNumber,
-          otp: enteredOtp,
+            phone: savedPhoneNumber,
+            otp: enteredOtp,
           };
 
-        console.log('📦 Payload to verify-otp:', payload);
+          console.log('📦 Payload to verify-otp:', payload);
 
           try {
             const response = await fetch('http://127.0.0.1:8000/api/verify-otp', {
@@ -300,7 +316,7 @@ let savedPhoneNumber = '';
                 'Content-Type': 'application/json',
               },
 
-                body: JSON.stringify(payload),
+              body: JSON.stringify(payload),
             });
 
             const data = await response.json();
