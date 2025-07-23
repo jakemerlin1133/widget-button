@@ -131,7 +131,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     }
 
   form.innerHTML = `
-  <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 10px;">
+  <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 20px;">
     <div id="formLogoHolder" style="display: flex; align-items: center; gap: 10px;"></div>
   </div>
 
@@ -139,17 +139,20 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     <h3 style="font-size: 20px; margin: 0;">Unlock the Instant Price</h3>
   </div>
 
-  <div>
+<div style="display: flex; gap: 10px; grid-column: span 2; margin-top: 20px;">
+  <div style="flex: 1;">
     <label for="fname">First Name:</label><br>
-    <input type="text" id="fname" name="fname" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
+    <input type="text" id="fname" name="fname" required style="font-size:16px; padding: 8px; width: 100%; outline: none;">
   </div>
 
-  <div>
+  <div style="flex: 1;">
     <label for="lname">Last Name:</label><br>
-    <input type="text" id="lname" name="lname" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
+    <input type="text" id="lname" name="lname" required style="font-size:16px; padding: 8px; width: 100%; outline: none;">
   </div>
+</div>
 
-  <div>
+<div style="display: flex; gap: 10px; grid-column: span 2; margin-top: 20px;">
+ <div style="flex: 1;">
     <label for="contactMode">Preferred Contact:</label><br>
     <select id="contactMode" name="contactMode" style="font-size:16px; padding: 8px; width: 100%; outline:none;">
       <option value="SMS">SMS</option>
@@ -157,22 +160,25 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     </select>
   </div>
 
-  <div>
+ <div style="flex: 1;">
     <label for="phone">Phone:</label><br>
     <input type="text" id="phone" name="phone" required style="font-size:16px; padding: 8px; width: 100%; outline:none;">
   </div>
+</div>
+
+
 
   <div style="grid-column: span 2;">
     <label for="comment">Comment:</label><br>
     <textarea id="comment" name="comment" required style="font-size:16px; padding: 8px; width: 100%; height: 150px; outline:none;"></textarea>
   </div>
 
-  <div style="grid-column: span 2; text-align: center; color: #303030ff; font-weight: 400; font-size: 13.6px; margin: 0px 17px;">
+  <div style="grid-column: span 2; text-align: center; color: #303030ff; font-weight: 400; font-size: 13.6px; margin: 20px 17px;">
     By requesting Instant Price, you agree that Dave Hallman Chevrolet and its affiliates, and sales professionals may call/text you about your inquiry, which may involve use of automated means and prerecorded/artificial voices. Message/data rates may apply. You also agree to our
     <a href="#" style="cursor: pointer;">terms of use</a>.
   </div>
 
-  <div style="grid-column: span 2; text-align: center;">
+  <div style="grid-column: span 2; text-align: center; margin-top: 20px;">
     <button type="submit" class="unlock-btn">Unlock Instant Price</button>
   </div>
 `;
