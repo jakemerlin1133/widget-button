@@ -15,6 +15,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     let carTitle = 'h3.vehicle-title__text';
     let currentCardUuid = null;
     let selectedCarTitle = '';
+    let savedPhoneNumber = '';
 
     // === Your existing styles & UI setup here (unchanged) ===
     const styleTag = document.createElement('style');
@@ -129,7 +130,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       clonedText.style.marginRight = '10px'; // space between logos
     }
 
-    form.innerHTML = `
+  form.innerHTML = `
   <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 10px;">
     <div id="formLogoHolder" style="display: flex; align-items: center; gap: 10px;"></div>
   </div>
@@ -191,8 +192,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
       logoHolder.appendChild(link);
     }
 
-    let savedPhoneNumber = '';
-
     // Form for submitting credentials and phone number
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -222,9 +221,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         });
 
         const result = await response.json();
-        console.log('✅ SMS API Response:', result);
-
-        const otp = result.otp || '';  // grab OTP if returned, else empty string
+        console.log('✅ SMS API Response:', result);  // grab OTP if returned, else empty string
 
         alert('📩 OTP sent to your phone!');
 
@@ -337,14 +334,18 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
 
               selectedCarTitle = '';
               uuidDisplay.innerText = '';
-              overlay.style.display = 'none';
-              formContainer.style.display = 'none';
+
+            // ✅ Hide OTP and re-show form properly
+            overlay.style.display = 'none';
+            overlay.style.visibility = 'hidden';
+            formContainer.innerHTML = ''; // Clear OTP UI
+            formContainer.style.display = 'none';
+            form.style.display = 'none'; // Keep form hidden until next unlock click
 
             } else {
               alert('❌ Invalid code or server error. Please try again.');
               otpInput.focus();
             }
-
           } catch (error) {
             console.error('Error verifying OTP:', error);
             alert('⚠️ Server error. Please try again later.');
@@ -387,11 +388,18 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
           btn.innerText = 'Unlock Instant Price';
           btn.className = 'unlock-btn';
           btn.style.margin = '6px 0px';
+
           btn.onclick = () => {
             const cardTitleElement = card?.querySelector(carTitle);
             selectedCarTitle = cardTitleElement ? cardTitleElement.textContent.trim() : '';
             currentCardUuid = uuid;
+
             overlay.style.display = 'block';
+            formContainer.style.display = '';
+            if (closeBtn) formContainer.appendChild(closeBtn);
+            formContainer.appendChild(uuidDisplay);
+            formContainer.appendChild(form);
+            form.style.display = 'block';
             formContainer.style.display = 'block';
           };
 
