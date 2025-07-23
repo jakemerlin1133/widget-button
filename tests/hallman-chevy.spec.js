@@ -131,7 +131,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     }
 
   form.innerHTML = `
-  <div style="grid-column: span 2; align-items: center; gap: 12px; margin-bottom: 20px;">
+  <div style="grid-column: span 2; align-items: center; gap: 12px;">
     <div id="formLogoHolder" style="display: flex; align-items: center; gap: 10px;"></div>
   </div>
 
@@ -139,7 +139,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
     <h3 style="font-size: 20px; margin: 0;">Unlock the Instant Price</h3>
   </div>
 
-<div style="display: flex; gap: 10px; grid-column: span 2; margin-top: 20px;">
+<div style="display: flex; gap: 10px; grid-column: span 2;">
   <div style="flex: 1;">
     <label for="fname">First Name:</label><br>
     <input type="text" id="fname" name="fname" required style="font-size:16px; padding: 8px; width: 100%; outline: none;">
@@ -151,7 +151,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
   </div>
 </div>
 
-<div style="display: flex; gap: 10px; grid-column: span 2; margin-top: 20px;">
+<div style="display: flex; gap: 10px; grid-column: span 2;">
  <div style="flex: 1;">
     <label for="contactMode">Preferred Contact:</label><br>
     <select id="contactMode" name="contactMode" style="font-size:16px; padding: 8px; width: 100%; outline:none;">
@@ -395,19 +395,33 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
           btn.className = 'unlock-btn';
           btn.style.margin = '6px 0px';
 
-          btn.onclick = () => {
-            const cardTitleElement = card?.querySelector(carTitle);
-            selectedCarTitle = cardTitleElement ? cardTitleElement.textContent.trim() : '';
-            currentCardUuid = uuid;
+btn.onclick = () => {
+  const cardTitleElement = card?.querySelector(carTitle);
+  selectedCarTitle = cardTitleElement ? cardTitleElement.textContent.trim() : '';
+  currentCardUuid = uuid;
 
-            overlay.style.display = 'block';
-            formContainer.style.display = '';
-            if (closeBtn) formContainer.appendChild(closeBtn);
-            formContainer.appendChild(uuidDisplay);
-            formContainer.appendChild(form);
-            form.style.display = 'block';
-            formContainer.style.display = 'block';
-          };
+  // ✅ Re-add overlay and show it
+  if (!document.body.contains(overlay)) {
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'block';
+  overlay.style.visibility = 'visible';
+
+  // ✅ Show the formContainer
+  formContainer.innerHTML = ''; // clean before reinsertion
+  if (closeBtn) formContainer.appendChild(closeBtn);
+  formContainer.appendChild(uuidDisplay);
+  formContainer.appendChild(form);
+
+  form.style.display = 'grid';
+  formContainer.style.display = 'block';
+  formContainer.style.visibility = 'visible';
+
+  // ✅ Append container if not already in DOM
+  if (!document.body.contains(formContainer)) {
+    document.body.appendChild(formContainer);
+  }
+};
 
           el.parentElement?.appendChild(btn);
           el.setAttribute('data-modified', 'true');
