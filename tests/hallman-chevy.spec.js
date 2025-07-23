@@ -300,26 +300,23 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         verifyBtn.addEventListener('click', async (e) => {
           e.preventDefault();
           const enteredOtp = otpInput.value.trim();
-          console.log('🔍 Entered code:', enteredOtp);
 
           const payload = {
             phone: savedPhoneNumber,
             otp: enteredOtp,
           };
 
-          console.log('📦 Payload to verify-otp:', payload);
+          console.log('📦 Sending payload to verify-otp:', payload);
 
           try {
             const response = await fetch('http://127.0.0.1:8000/api/verify-otp', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-
+              headers: {'Content-Type': 'application/json'},
               body: JSON.stringify(payload),
             });
 
             const data = await response.json();
+            console.log('🔁 Received from /verify-otp:', data);
 
             if (response.ok && data.success) {
               alert('✅ Code Verified! Unlocking price...');
@@ -344,7 +341,7 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
               formContainer.style.display = 'none';
 
             } else {
-              alert('❌ Invalid code. Please try again.');
+              alert('❌ Invalid code or server error. Please try again.');
               otpInput.focus();
             }
 
@@ -361,8 +358,6 @@ test('Inject form and handle unlock buttons on inventory page', async ({ page })
         formContainer.style.display = 'none';
       }
     });
-
-
 
     formContainer.appendChild(uuidDisplay);
     formContainer.appendChild(form);
